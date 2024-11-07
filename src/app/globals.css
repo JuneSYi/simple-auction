@@ -1,21 +1,29 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@import "~@blueprintjs/core/lib/css/blueprint.css";
+@import "~@blueprintjs/datetime2/lib/css/blueprint-datetime2.css";
+@import "~@blueprintjs/select/lib/css/blueprint-select.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #f0f4f8; /* Light pastel background */
+  --foreground: #333333; /* Darker text for contrast */
+  --primary-color: #a3d5d3; /* Pastel teal */
+  --secondary-color: #f7cac9; /* Pastel pink */
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+button {
+  background-color: var(--primary-color);
+  color: var(--foreground);
+}
+
+button:hover {
+  background-color: var(--secondary-color);
 }
