@@ -49,10 +49,17 @@ export default function Home() {
   const [days, setDays] = useState<number>(1);
   const toasterRef = useRef<OverlayToaster>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const toggleView = () => {
     setIsWeekView(prev => !prev);
   };
+
+  if (!mounted) return null;
 
   const fetchReservations = async () => {
     setIsLoading(true);
@@ -73,24 +80,29 @@ export default function Home() {
       return;
     }
 
-    const calculatedEndDate = addDays(startDate, days);
     setIsLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/reservations', {
+      const response = await axios.post('http://localhost:5000/api/reservations', {
         customer: selectedCustomer.name,
         startDate: format(startDate, 'MM/dd/yyyy'),
-        endDate: format(calculatedEndDate, 'MM/dd/yyyy'),
+        endDate: format(addDays(startDate, days), 'MM/dd/yyyy'),
         gpuIds: selectedGpuIds,
         color: selectedCustomer.color,
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        withCredentials: true
       });
-      toasterRef.current?.show({ message: 'Reservation successful', intent: Intent.SUCCESS });
-      fetchReservations();
-    } catch (error: any) {
-      if (error.response && error.response.status === 409) {
-        toasterRef.current?.show({ message: 'Conflicting reservation', intent: Intent.DANGER });
-      } else {
-        toasterRef.current?.show({ message: 'Error creating reservation', intent: Intent.DANGER });
+
+      if (response.status === 201) {
+        toasterRef.current?.show({ message: 'Reservation successful', intent: Intent.SUCCESS });
+        await fetchReservations();
       }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Error creating reservation';
+      toasterRef.current?.show({ message: errorMessage, intent: Intent.DANGER });
       console.error('Error creating reservation:', error);
     } finally {
       setIsLoading(false);
@@ -114,7 +126,7 @@ export default function Home() {
             </Button>
           ))}
         </ButtonGroup>
-
+        
         {/* Toggle for Days/Weeks */}
         <div className="mt-4">
           <Switch
@@ -129,11 +141,13 @@ export default function Home() {
         <Card elevation={Elevation.TWO} className="mt-4 p-4">
           <div className="flex space-x-4">
             <DateInput3
-              value={startDate ? format(startDate, 'MM/dd/yyyy') : ''}
+              defaultValue={undefined}
+              value={startDate ? format(startDate, 'MM/dd/yyyy') : undefined}
               onChange={(date: string | null) => setStartDate(date ? new Date(date) : null)}
               formatDate={(date: Date) => format(date, 'MM/dd/yyyy')}
               parseDate={(str: string) => new Date(str)}
               placeholder="Start Date (MM/DD/YYYY)"
+              popoverProps={{ usePortal: false }}
               className="bp3-input bp3-fill"
             />
             <InputGroup
